@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- EN: Ensure proper scaling on mobile devices // IT: Assicura la corretta visualizzazione su dispositivi mobili -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Animal Gallery Explorer</title>
+  
+  <!-- EN: Include Bootstrap CSS for responsive design // IT: Includi Bootstrap CSS per un design responsive -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  
+  <style>
+    /* EN: Basic styling for body and container // IT: Stili base per il body e il container */
+    body {
+      background-color: #f8f9fa;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+    .container {
+      max-width: 1200px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* EN: Navigation tabs styling // IT: Stile per le tab di navigazione */
+    .nav-tabs .nav-link {
+      cursor: pointer;
+    }
+    /* EN: Section container (each section hidden by default except the active one) // IT: Contenitore della sezione (inizialmente nascosto eccetto quella attiva) */
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+    /* EN: Styling for image cards in the grid // IT: Stile per le card delle immagini */
+    .img-card {
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: relative;
+      cursor: pointer;
+    }
+    .img-card img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    /* EN: Overlay favorite button on images // IT: Pulsante overlay per aggiungere ai preferiti */
+    .fav-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(255,255,255,0.8);
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    /* EN: Load More button styling // IT: Stile per il pulsante "Load More" */
+    .load-more-btn {
+      margin-top: 20px;
+    }
+    /* EN: Fixed footer styling // IT: Stile per il footer fisso */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #343a40;
+      color: #fff;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 0.9rem;
+    }
+    /* EN: Full-screen modal styles // IT: Stili per il modal a schermo intero */
+    .modal-img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- EN: App Title // IT: Titolo dell'app -->
+    <h1>Animal Gallery Explorer</h1>
+    
+    <!-- EN: Navigation Tabs // IT: Tab di navigazione -->
+    <ul class="nav nav-tabs mb-3" id="navTabs">
+      <li class="nav-item">
+        <a class="nav-link active" data-target="dogsSection">Dogs</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-target="catsSection">Cats</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-target="favoritesSection">Favorites</a>
+      </li>
+    </ul>
+    
+    <!-- EN: Dogs Section // IT: Sezione Cani -->
+    <div id="dogsSection" class="section active">
+      <!-- EN: Dropdown for dog breeds (including an "All" option) // IT: Menù a tendina per le razze dei cani (inclusa l'opzione "All") -->
+      <div class="mb-3">
+        <label for="dogBreedSelect" class="form-label">Select Dog Breed:</label>
+        <select id="dogBreedSelect" class="form-select">
+          <option value="all">All</option>
+          <!-- EN: Dog breeds will be populated dynamically // IT: Le razze dei cani verranno popolate dinamicamente -->
+        </select>
+      </div>
+      <div class="mb-3 text-center">
+        <button id="loadDogsBtn" class="btn btn-primary">Load Dog Images</button>
+      </div>
+      <!-- EN: Grid container for dog images // IT: Contenitore della griglia per le immagini dei cani -->
+      <div id="dogsGrid" class="row"></div>
+      <div class="text-center">
+        <button id="loadMoreDogsBtn" class="btn btn-secondary load-more-btn">Load More</button>
+      </div>
+    </div>
+    
+    <!-- EN: Cats Section // IT: Sezione Gatti -->
+    <div id="catsSection" class="section">
+      <!-- EN: Dropdown for cat breeds (including "All") // IT: Menù a tendina per le razze dei gatti (inclusa l'opzione "All") -->
+      <div class="mb-3">
+        <label for="catBreedSelect" class="form-label">Select Cat Breed:</label>
+        <select id="catBreedSelect" class="form-select">
+          <option value="all">All</option>
+          <!-- EN: Cat breeds will be populated dynamically // IT: Le razze dei gatti verranno popolate dinamicamente -->
+        </select>
+      </div>
+      <div class="mb-3 text-center">
+        <button id="loadCatsBtn" class="btn btn-primary">Load Cat Images</button>
+      </div>
+      <!-- EN: Grid container for cat images // IT: Contenitore della griglia per le immagini dei gatti -->
+      <div id="catsGrid" class="row"></div>
+      <div class="text-center">
+        <button id="loadMoreCatsBtn" class="btn btn-secondary load-more-btn">Load More</button>
+      </div>
+    </div>
+    
+    <!-- EN: Favorites Section // IT: Sezione Preferiti -->
+    <div id="favoritesSection" class="section">
+      <h3 class="text-center">Favorites</h3>
+      <div id="favoritesGrid" class="row"></div>
+    </div>
+  </div>
+  
+  <!-- EN: Full-screen Modal for image details // IT: Modal a schermo intero per i dettagli dell'immagine -->
+  <div class="modal fade" id="imgModal" tabindex="-1" aria-labelledby="imgModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <!-- EN: Modal title set dynamically // IT: Il titolo del modal viene impostato dinamicamente -->
+          <h5 class="modal-title" id="imgModalLabel"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="container">
+            <img id="modalImage" class="img-fluid modal-img mb-3" alt="Full Image" />
+            <div id="modalDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- EN: Fixed Footer // IT: Footer fisso -->
+  <footer>
+    Animal Gallery Explorer - Bocaletto Luca
+  </footer>
+  
+  <!-- EN: Include Bootstrap Bundle with Popper // IT: Includi Bootstrap Bundle JS (include Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    /************************************************************************************************************
+     * EN: Animal Gallery Explorer – Dogs & Cats with Breed Selection, Pagination, Full-Screen Modal,
+     *     and Favorites (All categories available)
+     * IT: Animal Gallery Explorer – Cani e Gatti con selezione razze, paginazione, modal a schermo intero,
+     *     e Preferiti (tutte le categorie disponibili)
+     * ----------------------------------------------------------------------------------------------------------
+     * EN: This app uses free APIs:
+     *     - Dog CEO API for dogs (to retrieve the list of breeds and random images)
+     *     - The Cat API for cats (to retrieve a list of cat breeds and images with breed details)
+     *     It allows users to filter by breed with an "All" option, load more images (using pagination),
+     *     and view images in full-screen modal displaying extra details (for cats, breed details are shown
+     *     if available). Favorite images can be added and viewed in a dedicated tab.
+     *
+     * IT: Questa app utilizza API gratuite:
+     *     - Dog CEO API per i cani (per scaricare la lista delle razze e immagini casuali)
+     *     - The Cat API per i gatti (per ottenere una lista di razze e immagini con dettagli sul breed)
+     *     L'app permette di filtrare per razza con opzione "All", caricare ulteriori immagini (pag. load more),
+     *     e visualizzare le immagini in modal a schermo intero mostrando dettagli extra (per i gatti, vengono mostrati
+     *     i dettagli del breed se disponibili). Le immagini favorite possono essere aggiunte e visualizzate in una sezione dedicata.
+     ************************************************************************************************************/
+    
+    // ---------------------------
+    // Global Variables and Favorites Array
+    // ---------------------------
+    let favorites = []; // Array to store favorites (object: {url, type, details})
+    
+    // ---------------------------
+    // Navigation Tabs
+    // ---------------------------
+    const navTabs = document.getElementById("navTabs");
+    const sections = document.querySelectorAll(".section");
+    
+    navTabs.addEventListener("click", (event) => {
+      const targetBtn = event.target.closest(".nav-link");
+      if (!targetBtn) return;
+      // Remove active class from all nav links and add to clicked one
+      navTabs.querySelectorAll(".nav-link").forEach(btn => btn.classList.remove("active"));
+      targetBtn.classList.add("active");
+      // Show corresponding section
+      const targetSectionId = targetBtn.getAttribute("data-target");
+      sections.forEach(section => {
+        section.classList.toggle("active", section.id === targetSectionId);
+      });
+      // If favorites section, update grid
+      if (targetSectionId === "favoritesSection") {
+        displayFavorites();
+      }
+    });
+    
+    // ---------------------------
+    // DOGS SECTION
+    // ---------------------------
+    const dogBreedSelect = document.getElementById("dogBreedSelect");
+    const loadDogsBtn = document.getElementById("loadDogsBtn");
+    const dogsGrid = document.getElementById("dogsGrid");
+    const loadMoreDogsBtn = document.getElementById("loadMoreDogsBtn");
+    
+    let dogImagesLoaded = [];
+    // Function to load the list of dog breeds from Dog CEO API
+    async function loadDogBreeds() {
+      try {
+        const response = await fetch("https://dog.ceo/api/breeds/list/all");
+        if (!response.ok) throw new Error("Network response not OK: " + response.status);
+        const data = await response.json();
+        const breeds = Object.keys(data.message);
+        // Populate dropdown with "All" then all breeds
+        dogBreedSelect.innerHTML = '<option value="all">All</option>';
+        breeds.forEach(breed => {
+          const option = document.createElement("option");
+          option.value = breed;
+          option.textContent = breed.charAt(0).toUpperCase() + breed.slice(1);
+          dogBreedSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading dog breeds:", error);
+      }
+    }
+    
+    // Function to load dog images (12 per load)
+    async function loadDogImages(reset = false) {
+      if (reset) dogImagesLoaded = [];
+      let url = "";
+      if (dogBreedSelect.value === "all") {
+        url = `https://dog.ceo/api/breeds/image/random/12`;
+      } else {
+        url = `https://dog.ceo/api/breed/${dogBreedSelect.value}/images/random/12`;
+      }
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Network response not OK: " + response.status);
+        const data = await response.json();
+        // Append new images to global dogImagesLoaded
+        dogImagesLoaded = dogImagesLoaded.concat(data.message);
+        displayImages(dogImagesLoaded, dogsGrid, "dog");
+      } catch (error) {
+        console.error("Error loading dog images:", error);
+        dogsGrid.innerHTML = "<p class='text-center text-danger'>Error loading dog images.</p>";
+      }
+    }
+    
+    loadDogsBtn.addEventListener("click", () => loadDogImages(true));
+    loadMoreDogsBtn.addEventListener("click", () => loadDogImages(false));
+    
+    // ---------------------------
+    // CATS SECTION
+    // ---------------------------
+    const catBreedSelect = document.getElementById("catBreedSelect");
+    const loadCatsBtn = document.getElementById("loadCatsBtn");
+    const catsGrid = document.getElementById("catsGrid");
+    const loadMoreCatsBtn = document.getElementById("loadMoreCatsBtn");
+    
+    let catImagesLoaded = [];
+    let catImagePage = 0;
+    // Function to load list of cat breeds from The Cat API
+    async function loadCatBreeds() {
+      try {
+        const response = await fetch("https://api.thecatapi.com/v1/breeds");
+        if (!response.ok) throw new Error("Network response not OK: " + response.status);
+        const data = await response.json();
+        // Populate dropdown with "All" then each breed (using breed id)
+        catBreedSelect.innerHTML = '<option value="all">All</option>';
+        data.forEach(breed => {
+          const option = document.createElement("option");
+          option.value = breed.id;
+          option.textContent = breed.name;
+          catBreedSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading cat breeds:", error);
+      }
+    }
+    
+    // Function to load cat images (12 per load) from The Cat API
+    async function loadCatImages(reset = false) {
+      if (reset) { 
+        catImagesLoaded = [];
+        catImagePage = 0;
+      }
+      catImagePage++;
+      let url = "";
+      if (catBreedSelect.value === "all") {
+        url = `https://api.thecatapi.com/v1/images/search?limit=12&page=${catImagePage}`;
+      } else {
+        url = `https://api.thecatapi.com/v1/images/search?breed_ids=${catBreedSelect.value}&limit=12&page=${catImagePage}`;
+      }
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Network response not OK: " + response.status);
+        const data = await response.json();
+        // For each result, extract url and, if available, breed details (first element of breeds array)
+        const catResults = data.map(item => ({
+          url: item.url,
+          details: (item.breeds && item.breeds.length > 0) ? item.breeds[0] : null
+        }));
+        catImagesLoaded = catImagesLoaded.concat(catResults);
+        displayImages(catImagesLoaded, catsGrid, "cat");
+      } catch (error) {
+        console.error("Error loading cat images:", error);
+        catsGrid.innerHTML = "<p class='text-center text-danger'>Error loading cat images.</p>";
+      }
+    }
+    
+    loadCatsBtn.addEventListener("click", () => loadCatImages(true));
+    loadMoreCatsBtn.addEventListener("click", () => loadCatImages(false));
+    
+    // ---------------------------
+    // COMMON FUNCTION: Display Images in Grid
+    // ---------------------------
+    /**
+     * EN: Display an array of images in the specified container.
+     * IT: Visualizza un array di immagini nel contenitore specificato.
+     * For dogs, the array elements are URL strings.
+     * For cats, the array elements are objects: {url, details}
+     */
+    function displayImages(images, container, type) {
+      container.innerHTML = "";
+      if (!images || images.length === 0) {
+        container.innerHTML = "<p class='text-center text-danger'>No images available.</p>";
+        return;
+      }
+      images.forEach(item => {
+        let url = (typeof item === "string") ? item : item.url;
+        const colDiv = document.createElement("div");
+        colDiv.className = "col-12 col-sm-6 col-md-4";
+        
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "img-card";
+        
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = type === "dog" ? "Dog Image" : "Cat Image";
+        cardDiv.appendChild(img);
+        
+        // Add Favorite button overlay
+        const favBtn = document.createElement("button");
+        favBtn.className = "fav-btn btn btn-sm btn-warning";
+        favBtn.textContent = "Favorite";
+        favBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addToFavorites(url, type, (typeof item === "object") ? item.details : null);
+        });
+        cardDiv.appendChild(favBtn);
+        
+        // Add click event to open full-screen modal with extra details
+        cardDiv.addEventListener("click", () => {
+          openModal(url, type, (typeof item === "object") ? item.details : null);
+        });
+        
+        colDiv.appendChild(cardDiv);
+        container.appendChild(colDiv);
+      });
+    }
+    
+    // ---------------------------
+    // FAVORITES SECTION
+    // ---------------------------
+    const favoritesGrid = document.getElementById("favoritesGrid");
+    
+    /**
+     * EN: Add an image to favorites if not already present.
+     * IT: Aggiungi un'immagine ai preferiti se non già presente.
+     */
+    function addToFavorites(url, type, details = null) {
+      if (favorites.some(item => item.url === url)) {
+        alert("Image already in favorites!");
+        return;
+      }
+      favorites.push({ url, type, details });
+      alert("Added to favorites!");
+    }
+    
+    /**
+     * EN: Display favorites in the favorites grid.
+     * IT: Visualizza i preferiti nella griglia dedicata.
+     */
+    function displayFavorites() {
+      favoritesGrid.innerHTML = "";
+      if (favorites.length === 0) {
+        favoritesGrid.innerHTML = "<p class='text-center'>No favorites saved.</p>";
+        return;
+      }
+      favorites.forEach(item => {
+        const colDiv = document.createElement("div");
+        colDiv.className = "col-12 col-sm-6 col-md-4";
+        
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "img-card";
+        
+        const img = document.createElement("img");
+        img.src = item.url;
+        img.alt = item.type === "dog" ? "Favorite Dog" : "Favorite Cat";
+        cardDiv.appendChild(img);
+        
+        // Remove from favorites button
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "fav-btn btn btn-sm btn-danger";
+        removeBtn.textContent = "Remove";
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeFromFavorites(item.url);
+        });
+        cardDiv.appendChild(removeBtn);
+        
+        // Allow click to open modal to view details
+        cardDiv.addEventListener("click", () => {
+          openModal(item.url, item.type, item.details);
+        });
+        
+        colDiv.appendChild(cardDiv);
+        favoritesGrid.appendChild(colDiv);
+      });
+    }
+    
+    /**
+     * EN: Remove an image from favorites.
+     * IT: Rimuovi un'immagine dai preferiti.
+     */
+    function removeFromFavorites(url) {
+      favorites = favorites.filter(item => item.url !== url);
+      displayFavorites();
+    }
+    
+    // ---------------------------
+    // FULL-SCREEN MODAL
+    // ---------------------------
+    const imgModal = new bootstrap.Modal(document.getElementById("imgModal"));
+    const modalImage = document.getElementById("modalImage");
+    const imgModalLabel = document.getElementById("imgModalLabel");
+    const modalDetails = document.getElementById("modalDetails");
+    
+    /**
+     * EN: Open the modal with the image in full screen.
+     * If type is "cat" and details are available, show extra info.
+     * IT: Apri il modal a schermo intero mostrando l'immagine ingrandita.
+     * Se il tipo è "cat" e sono disponibili dettagli, mostra informazioni extra.
+     * @param {string} url - Image URL.
+     * @param {string} type - "dog" or "cat".
+     * @param {object|null} details - Extra details (for cats).
+     */
+    function openModal(url, type, details = null) {
+      imgModalLabel.textContent = type === "dog" ? "Dog Image" : "Cat Image";
+      modalImage.src = url;
+      modalImage.alt = type === "dog" ? "Dog Image" : "Cat Image";
+      
+      // For cats, display extra details if available
+      if (type === "cat" && details) {
+        modalDetails.innerHTML = `
+          <p><strong>Breed:</strong> ${details.name || "N/A"}</p>
+          <p><strong>Description:</strong> ${details.description || "N/A"}</p>
+          <p><strong>Temperament:</strong> ${details.temperament || "N/A"}</p>
+          <p><strong>Origin:</strong> ${details.origin || "N/A"}</p>
+          <p><strong>Weight:</strong> ${details.weight ? details.weight.metric + " kg" : "N/A"}</p>
+        `;
+      } else {
+        modalDetails.innerHTML = "";
+      }
+      imgModal.show();
+    }
+    
+    // ---------------------------
+    // INITIALIZATION
+    // ---------------------------
+    // Load dog and cat breeds on page load
+    loadDogBreeds();
+    loadCatBreeds();
+    
+    // Optionally, the user can click the "Load Images" buttons to load images
+    // (No auto-loading is done here, waiting for user action)
+    
+  </script>
+</body>
+</html>
