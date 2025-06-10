@@ -9,6 +9,10 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![API](https://img.shields.io/badge/API-Free%20Open%20Data-9cf?style=flat-square&logo=paw)
 
+<a href="https://github.com/bocaletto-luca" target="_blank">
+  <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" title="Visit my GitHub" width="40" style="vertical-align: middle; margin-right: 10px;">
+</a>
+
 ## 📌 Overview  
 
 **Dogs & Cats Explorer** is a **fun and interactive web app** designed to help users **search and discover images of dogs and cats** using **free open-data APIs**.  
